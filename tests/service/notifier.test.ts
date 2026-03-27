@@ -27,18 +27,42 @@ describe('notifySuccess', () => {
     vi.restoreAllMocks();
   });
 
-  it('calls chat.postMessage with correct channel and message content', async () => {
+  it('sends Block Kit message with header, button, and context', async () => {
     await notifySuccess(client as unknown as WebClient, params);
 
     expect(client.chat.postMessage).toHaveBeenCalledOnce();
     const call = client.chat.postMessage.mock.calls[0][0];
 
     expect(call.channel).toBe('C123');
+
+    // fallback text
+    expect(call.text).toContain('배포 완료');
     expect(call.text).toContain('index.html');
-    expect(call.text).toContain('<@U456>');
-    expect(call.text).toContain('my-project');
-    expect(call.text).toContain('https://my-project.pages.dev');
-    expect(call.text).toContain('3.5s');
+
+    // blocks 존재
+    expect(call.blocks).toBeDefined();
+    expect(call.blocks).toHaveLength(4);
+
+    // header block
+    expect(call.blocks[0]).toMatchObject({
+      type: 'header',
+      text: { type: 'plain_text', text: '✅ 배포 완료' },
+    });
+
+    // section with filename
+    expect(call.blocks[1].text.text).toContain('*index.html*');
+
+    // actions block with primary button linking to deploy URL
+    const button = call.blocks[2].elements[0];
+    expect(button.type).toBe('button');
+    expect(button.url).toBe('https://my-project.pages.dev');
+    expect(button.style).toBe('primary');
+
+    // context block with user mention, project name, duration
+    const contextTexts = call.blocks[3].elements.map((e: any) => e.text);
+    expect(contextTexts.some((t: string) => t.includes('<@U456>'))).toBe(true);
+    expect(contextTexts.some((t: string) => t.includes('my-project'))).toBe(true);
+    expect(contextTexts.some((t: string) => t.includes('3.5s'))).toBe(true);
   });
 
   it('does not rethrow when chat.postMessage throws', async () => {
@@ -62,8 +86,8 @@ describe('notifyFailure', () => {
   const params: FailureParams = {
     channel: 'C123',
     filename: 'index.html',
-    stage: 'wrangler deploy',
-    errorMessage: 'Project not found',
+    stage: 'deploy',
+    errorMessage: 'Wrangler deploy failed',
     retryCount: 2,
     maxRetries: 3,
   };
@@ -80,17 +104,39 @@ describe('notifyFailure', () => {
     vi.restoreAllMocks();
   });
 
-  it('calls chat.postMessage with correct channel and failure details', async () => {
+  it('sends Block Kit message with header, fields, and context', async () => {
     await notifyFailure(client as unknown as WebClient, params);
 
     expect(client.chat.postMessage).toHaveBeenCalledOnce();
     const call = client.chat.postMessage.mock.calls[0][0];
 
     expect(call.channel).toBe('C123');
+
+    // fallback text
+    expect(call.text).toContain('배포 실패');
     expect(call.text).toContain('index.html');
-    expect(call.text).toContain('wrangler deploy');
-    expect(call.text).toContain('Project not found');
-    expect(call.text).toContain('2/3');
+
+    // blocks
+    expect(call.blocks).toBeDefined();
+    expect(call.blocks).toHaveLength(4);
+
+    // header
+    expect(call.blocks[0]).toMatchObject({
+      type: 'header',
+      text: { type: 'plain_text', text: '❌ 배포 실패' },
+    });
+
+    // section with filename
+    expect(call.blocks[1].text.text).toContain('*index.html*');
+
+    // fields section with stage and error message
+    const fields = call.blocks[2].fields;
+    expect(fields).toHaveLength(2);
+    expect(fields[0].text).toContain('deploy');
+    expect(fields[1].text).toContain('Wrangler deploy failed');
+
+    // context with retry count
+    expect(call.blocks[3].elements[0].text).toContain('2/3');
   });
 
   it('does not rethrow when chat.postMessage throws', async () => {

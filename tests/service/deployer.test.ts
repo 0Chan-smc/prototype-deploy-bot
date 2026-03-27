@@ -144,8 +144,8 @@ describe('deploy', () => {
 
     expect(mockedExeca).toHaveBeenCalledOnce();
     const [cmd, args, options] = mockedExeca.mock.calls[0];
-    expect(cmd).toBe('pnpm');
-    expect(args).toEqual(['exec', 'wrangler', 'deploy']);
+    expect(cmd).toContain('wrangler');
+    expect(args).toEqual(['deploy']);
     expect((options as any).cwd).toBeTruthy();
   });
 
