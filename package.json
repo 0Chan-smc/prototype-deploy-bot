@@ -1,0 +1,39 @@
+{
+  "name": "lens-prototype-deploy-bot",
+  "version": "0.1.0",
+  "description": "Slack bot that deploys HTML files to Cloudflare Pages",
+  "type": "module",
+  "main": "dist/app.js",
+  "scripts": {
+    "dev": "tsx --watch --env-file .env src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [],
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@slack/bolt": "^4.6.0",
+    "@slack/web-api": "^7.15.0",
+    "execa": "^9.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@vitest/coverage-v8": "^4.1.2",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2",
+    "wrangler": "^3.114.17"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd",
+      "sharp"
+    ]
+  }
+}
