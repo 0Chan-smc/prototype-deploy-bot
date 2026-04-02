@@ -30,6 +30,7 @@ function makeConfig(overrides: Partial<Config> = {}): Config {
     CLOUDFLARE_API_TOKEN: 'cf-token',
     CLOUDFLARE_ACCOUNT_ID: 'cf-account',
     CLOUDFLARE_PROJECT_NAME: 'test-project',
+    ALLOWED_USER_IDS: [],
     MAX_FILE_SIZE_BYTES: 5242880,
     PORT: 3000,
     ...overrides,
@@ -414,6 +415,33 @@ describe('pipeline integration', () => {
       await vi.runAllTimersAsync();
 
       expect(mockedGetFile).toHaveBeenCalledOnce();
+    });
+
+    it('ignores events from non-allowed users', async () => {
+      const restrictedConfig = makeConfig({ ALLOWED_USER_IDS: ['U_ALLOWED'] });
+      const handlers: Record<string, Function> = {};
+      const fakeApp = {
+        event: (eventName: string, handler: Function) => {
+          handlers[eventName] = handler;
+        },
+        client: {},
+      } as unknown as App;
+
+      const processor = createProcessor(fakeApp, restrictedConfig);
+      queue = new DeployQueue(processor);
+
+      registerFileSharedHandler(fakeApp, queue, restrictedConfig);
+
+      await handlers['file_shared']({
+        event: { channel_id: 'C_TARGET', file_id: 'F400', user_id: 'U_NOT_ALLOWED' },
+        body: { event_id: 'ev_handler_user' },
+      });
+
+      await queue.shutdown();
+      await vi.runAllTimersAsync();
+
+      expect(queue.has('ev_handler_user')).toBe(false);
+      expect(mockedGetFile).not.toHaveBeenCalled();
     });
   });
 });

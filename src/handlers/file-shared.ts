@@ -72,6 +72,11 @@ export function registerFileSharedHandler(
       return;
     }
 
+    if (config.ALLOWED_USER_IDS.length > 0 && !config.ALLOWED_USER_IDS.includes(event.user_id)) {
+      console.log(`[DEBUG] User not allowed: ${event.user_id}`);
+      return;
+    }
+
     const eventId = (body as Record<string, unknown>).event_id as string;
     if (queue.has(eventId)) {
       console.log(`[DEBUG] Duplicate event: ${eventId}`);

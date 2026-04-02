@@ -8,6 +8,7 @@ export interface Config {
   CLOUDFLARE_API_TOKEN: string;
   CLOUDFLARE_ACCOUNT_ID: string;
   CLOUDFLARE_PROJECT_NAME: string;
+  ALLOWED_USER_IDS: string[];
   MAX_FILE_SIZE_BYTES: number;
   PORT: number;
 }
@@ -38,6 +39,10 @@ export function loadConfig(): Config {
   const CLOUDFLARE_ACCOUNT_ID = requireEnv('CLOUDFLARE_ACCOUNT_ID');
   const CLOUDFLARE_PROJECT_NAME = requireEnv('CLOUDFLARE_PROJECT_NAME');
 
+  const ALLOWED_USER_IDS = process.env.ALLOWED_USER_IDS
+    ? process.env.ALLOWED_USER_IDS.split(',').map((id) => id.trim()).filter(Boolean)
+    : [];
+
   const MAX_FILE_SIZE_BYTES = process.env.MAX_FILE_SIZE_BYTES
     ? Number(process.env.MAX_FILE_SIZE_BYTES)
     : 5242880;
@@ -54,6 +59,7 @@ export function loadConfig(): Config {
     CLOUDFLARE_API_TOKEN,
     CLOUDFLARE_ACCOUNT_ID,
     CLOUDFLARE_PROJECT_NAME,
+    ALLOWED_USER_IDS,
     MAX_FILE_SIZE_BYTES,
     PORT,
   };

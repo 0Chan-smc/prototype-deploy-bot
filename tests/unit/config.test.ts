@@ -22,6 +22,7 @@ describe('loadConfig', () => {
     for (const key of Object.keys(REQUIRED_ENV)) {
       delete process.env[key];
     }
+    delete process.env.ALLOWED_USER_IDS;
     delete process.env.MAX_FILE_SIZE_BYTES;
     delete process.env.PORT;
   });
@@ -45,6 +46,7 @@ describe('loadConfig', () => {
       CLOUDFLARE_API_TOKEN: 'cf-api-token',
       CLOUDFLARE_ACCOUNT_ID: 'cf-account-id',
       CLOUDFLARE_PROJECT_NAME: 'my-project',
+      ALLOWED_USER_IDS: [],
       MAX_FILE_SIZE_BYTES: 5242880,
       PORT: 3000,
     });
@@ -97,5 +99,21 @@ describe('loadConfig', () => {
     const config = loadConfig();
 
     expect(config.SLACK_SOCKET_MODE).toBe(false);
+  });
+
+  it('parses ALLOWED_USER_IDS as comma-separated array', () => {
+    Object.assign(process.env, { ...REQUIRED_ENV, ALLOWED_USER_IDS: 'U111,U222, U333' });
+
+    const config = loadConfig();
+
+    expect(config.ALLOWED_USER_IDS).toEqual(['U111', 'U222', 'U333']);
+  });
+
+  it('defaults ALLOWED_USER_IDS to empty array when not set', () => {
+    Object.assign(process.env, REQUIRED_ENV);
+
+    const config = loadConfig();
+
+    expect(config.ALLOWED_USER_IDS).toEqual([]);
   });
 });
