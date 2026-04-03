@@ -1,5 +1,4 @@
 import type { WebClient } from '@slack/web-api';
-import type { KnownBlock } from '@slack/bolt';
 
 export interface SuccessParams {
   channel: string;
@@ -24,7 +23,7 @@ export async function notifySuccess(client: WebClient, params: SuccessParams): P
 
   const text = `✅ 배포 완료 — ${params.filename} → ${params.deployUrl}`;
 
-  const blocks: KnownBlock[] = [
+  const blocks: Record<string, unknown>[] = [
     {
       type: 'header',
       text: { type: 'plain_text', text: '✅ 배포 완료', emoji: true },
@@ -55,7 +54,7 @@ export async function notifySuccess(client: WebClient, params: SuccessParams): P
   ];
 
   try {
-    await client.chat.postMessage({ channel: params.channel, text, blocks });
+    await client.chat.postMessage({ channel: params.channel, text, blocks: blocks as any });
   } catch (err) {
     console.error('Failed to send success notification:', err);
   }
@@ -64,7 +63,7 @@ export async function notifySuccess(client: WebClient, params: SuccessParams): P
 export async function notifyFailure(client: WebClient, params: FailureParams): Promise<void> {
   const text = `❌ 배포 실패 — ${params.filename} (${params.stage}: ${params.errorMessage})`;
 
-  const blocks: KnownBlock[] = [
+  const blocks: Record<string, unknown>[] = [
     {
       type: 'header',
       text: { type: 'plain_text', text: '❌ 배포 실패', emoji: true },
@@ -89,7 +88,7 @@ export async function notifyFailure(client: WebClient, params: FailureParams): P
   ];
 
   try {
-    await client.chat.postMessage({ channel: params.channel, text, blocks });
+    await client.chat.postMessage({ channel: params.channel, text, blocks: blocks as any });
   } catch (err) {
     console.error('Failed to send failure notification:', err);
   }
